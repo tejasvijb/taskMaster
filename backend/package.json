@@ -31,8 +31,8 @@
     "express": "^5.1.0",
     "express-async-handler": "^1.2.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.19.2",
     "morgan": "^1.10.1",
+    "pg": "^8.18.0",
     "uuid": "^13.0.0",
     "zod": "^4.1.12"
   },
@@ -44,6 +44,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.9.1",
+    "@types/pg": "^8.16.0",
     "eslint": "^9.38.0",
     "eslint-plugin-perfectionist": "^4.15.1",
     "husky": "^9.1.7",
