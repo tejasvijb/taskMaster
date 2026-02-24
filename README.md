@@ -1,1 +1,1 @@
-Backend boilerplate Mongoose, express, typescript
+Backend boilerplate sql, express, typescript
