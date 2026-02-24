@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { ZodError, ZodType } from "zod";
 
+import { STATUS_CODES } from "../constants/index.js";
+
 /**
  * Validation middleware factory function
  * Validates request body against a provided Zod schema
@@ -19,7 +21,7 @@ export const validateSchema = (schema: ZodType) => {
           message: err.message,
         }));
 
-        return res.status(400).json({
+        return res.status(STATUS_CODES.VALIDATION_ERROR).json({
           errors: formattedErrors,
           message: "Validation failed",
           success: false,

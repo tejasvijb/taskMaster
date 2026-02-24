@@ -1,5 +1,9 @@
 import express from "express";
 
-const app = express();
+import userRoutes from "./routes/userRoutes.js";
 
-export { app as apiV1Router };
+const apiV1Router = express();
+
+apiV1Router.use("/users", userRoutes);
+
+export { apiV1Router };
