@@ -9,6 +9,14 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
   const stackTrace = process.env.NODE_ENV === "development" ? err.stack : null;
 
   switch (statusCode) {
+    case STATUS_CODES.CONFLICT:
+      res.status(statusCode).json({
+        message: err.message,
+        stackTrace,
+        title: "Conflict",
+      });
+      break;
+
     case STATUS_CODES.FORBIDDEN:
       res.status(statusCode).json({
         message: err.message,

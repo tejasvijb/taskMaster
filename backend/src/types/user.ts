@@ -17,7 +17,7 @@ export type UserRole = "admin" | "user";
 
 interface UserBase {
   email: string;
-  firstName: string;
-  lastName: string;
+  firstname: string;
+  lastname: string;
   role: UserRole;
 }
