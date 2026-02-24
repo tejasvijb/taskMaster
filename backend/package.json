@@ -37,7 +37,7 @@
     "node-pg-migrate": "^8.0.4",
     "pg": "^8.18.0",
     "uuid": "^13.0.0",
-    "zod": "^4.1.12"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",

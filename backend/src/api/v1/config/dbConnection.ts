@@ -1,7 +1,6 @@
-import { Pool } from "pg"
+import { Pool, QueryResult, QueryResultRow } from "pg";
 
-
-export const pgPool = new Pool({
+export const pool = new Pool({
   database: process.env.PG_DATABASE,
   host: process.env.PG_HOST,
   password: process.env.PG_PASSWORD,
@@ -9,10 +8,18 @@ export const pgPool = new Pool({
   user: process.env.PG_USER,
 });
 
+export const query = <T extends QueryResultRow = QueryResultRow>(
+  text: string,
+  params?: unknown[]
+): Promise<QueryResult<T>> => {
+  return pool.query<T>(text, params);
+};
+
+
 const connectDb = async () => {
   try {
-    await pgPool.connect();
-    console.log(`PostgreSQL Connected: ${pgPool.options.host}, ${pgPool.options.database}`);
+    await pool.connect();
+    console.log(`PostgreSQL Connected: ${pool.options.host}, ${pool.options.database}`);
   } catch (error) {
     console.error(`Error: ${error}`);
     process.exit(1);
