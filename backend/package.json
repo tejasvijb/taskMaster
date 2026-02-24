@@ -1,7 +1,7 @@
 {
-  "name": "omni_connect-backend",
+  "name": "taskmaster-backend",
   "version": "1.0.0",
-  "description": "The Role-Based Access Control based backend",
+  "description": "A Collaborative Task Tracking System",
   "scripts": {
     "dev": "tsx --watch --env-file .env src/index.ts",
     "start": "node --env-file .env dist/src/index.js",
@@ -12,26 +12,29 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "format:check:debug": "prettier --check . --log-level debug",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate": "cross-env node-pg-migrate",
+    "migrate:create": "cross-env node-pg-migrate create"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tejasvijb/omni_console.git"
+    "url": "git+https://github.com/tejasvijb/taskMaster.git"
   },
   "keywords": [],
   "author": "tejasvijb",
   "license": "ISC",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/tejasvijb/omni_console/issues"
+    "url": "https://github.com/tejasvijb/taskMaster/issues"
   },
-  "homepage": "https://github.com/tejasvijb/omni_console#readme",
+  "homepage": "https://github.com/tejasvijb/taskMaster#readme",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "express": "^5.1.0",
     "express-async-handler": "^1.2.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
+    "node-pg-migrate": "^8.0.4",
     "pg": "^8.18.0",
     "uuid": "^13.0.0",
     "zod": "^4.1.12"
@@ -45,6 +48,8 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.9.1",
     "@types/pg": "^8.16.0",
+    "cross-env": "^10.1.0",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.38.0",
     "eslint-plugin-perfectionist": "^4.15.1",
     "husky": "^9.1.7",
