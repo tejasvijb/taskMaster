@@ -22,6 +22,13 @@ const userUpdateSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters").optional(),
 });
 
+// Define the schema for user profile details update
+const userProfileUpdateSchema = z.object({
+  avatar_url: z.url("Invalid URL").max(500, "Avatar URL must be less than 500 characters").optional(),
+  bio: z.string().max(500, "Bio must be less than 500 characters").optional(),
+  timezone: z.string().max(50, "Timezone must be less than 50 characters").optional(),
+});
+
 const userRoleEnums = ["user", "admin"] as const;
 
 const userRole = z.enum(userRoleEnums);
@@ -38,11 +45,12 @@ const userResponseSchema = z.object({
 });
 
 export type UserLoginType = z.infer<typeof userLoginSchema>;
+export type UserProfileUpdateType = z.infer<typeof userProfileUpdateSchema>;
 export type UserRegisterType = z.infer<typeof userRegisterSchema>;
 export type UserResponseType = z.infer<typeof userResponseSchema>;
 export type UserRoleType = z.infer<typeof userRole>;
 export type UserUpdateType = z.infer<typeof userUpdateSchema>;
 
-export { userLoginSchema, userRegisterSchema, userResponseSchema, userRole, userUpdateSchema };
+export { userLoginSchema, userProfileUpdateSchema, userRegisterSchema, userResponseSchema, userRole, userUpdateSchema };
 
 export default userRegisterSchema;
