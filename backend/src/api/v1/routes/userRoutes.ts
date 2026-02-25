@@ -1,7 +1,7 @@
 import express from "express";
 
 import { STATUS_CODES } from "../constants/index.js";
-import { loginUser, logoutUser, registerUser, updateUserProfile } from "../controllers/userController.js";
+import { getUserProfile, loginUser, logoutUser, registerUser, updateUserProfile } from "../controllers/userController.js";
 import validateSchema from "../middleware/validateSchema.js";
 import validateToken from "../middleware/validateToken.js";
 import { userLoginSchema, userProfileUpdateSchema, userRegisterSchema } from "../validations/userValidate.js";
@@ -22,5 +22,7 @@ router.post("/login", validateSchema(userLoginSchema), loginUser);
 router.post("/logout", validateToken, logoutUser);
 
 router.put("/profile", validateToken, validateSchema(userProfileUpdateSchema), updateUserProfile);
+
+router.get("/profile", validateToken, getUserProfile);
 
 export default router;

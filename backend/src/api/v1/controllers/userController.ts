@@ -189,7 +189,6 @@ export const updateUserProfile = async (req: Request, res: Response, next: NextF
       RETURNING id, email, firstname, lastname, role, bio, avatar_url, timezone, created_at, updated_at
     `;
 
-
     const result = await query(updateQuery, updateValues);
 
     if (result.rows.length === 0) {
@@ -201,6 +200,48 @@ export const updateUserProfile = async (req: Request, res: Response, next: NextF
 
     res.status(STATUS_CODES.OK).json({
       message: "Profile updated successfully",
+      success: true,
+      user: {
+        avatar_url: user.avatar_url,
+        bio: user.bio,
+        created_at: user.created_at,
+        email: user.email,
+        firstname: user.firstname,
+        id: user.id,
+        lastname: user.lastname,
+        role: user.role,
+        timezone: user.timezone,
+        updated_at: user.updated_at,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUserProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(STATUS_CODES.UNAUTHORIZED);
+      throw new Error("User not authenticated");
+    }
+
+    const result = await query(
+      "SELECT id, email, firstname, lastname, role, bio, avatar_url, timezone, created_at, updated_at FROM users WHERE id = $1",
+      [userId],
+    );
+
+    if (result.rows.length === 0) {
+      res.status(STATUS_CODES.NOT_FOUND);
+      throw new Error("User not found");
+    }
+
+    const user = result.rows[0];
+
+    res.status(STATUS_CODES.OK).json({
+      message: "Profile retrieved successfully",
       success: true,
       user: {
         avatar_url: user.avatar_url,
