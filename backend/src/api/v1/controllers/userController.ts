@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 import { query } from "../config/dbConnection.js";
 import { STATUS_CODES } from "../constants/index.js";
-import { UserLoginType, UserRegisterType } from "../validations/userValidate.js";
+import { UserLoginType, UserProfileUpdateType, UserRegisterType } from "../validations/userValidate.js";
 import { userRole } from "../validations/userValidate.js";
 
 const TOKEN_EXPIRY = "15m";
@@ -67,7 +67,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
 
     if (result.rows.length === 0) {
       res.status(STATUS_CODES.UNAUTHORIZED);
-      throw new Error("Invalid email or password");
+      throw new Error("Invalid email");
     }
 
     const user = result.rows[0];
@@ -76,7 +76,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       res.status(STATUS_CODES.UNAUTHORIZED);
-      throw new Error("Invalid email or password");
+      throw new Error("Invalid password");
     }
 
     // Create JWT token
@@ -135,6 +135,85 @@ export const logoutUser = async (req: Request, res: Response, next: NextFunction
     res.status(STATUS_CODES.OK).json({
       message: "Logged out successfully",
       success: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateUserProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { avatar_url, bio, timezone } = req.body as UserProfileUpdateType;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(STATUS_CODES.UNAUTHORIZED);
+      throw new Error("User not authenticated");
+    }
+
+    // Build dynamic update query
+    const updateFields: string[] = [];
+    const updateValues: unknown[] = [];
+    let paramCount = 1;
+
+    if (bio !== undefined) {
+      updateFields.push(`bio = $${paramCount}`);
+      updateValues.push(bio);
+      paramCount++;
+    }
+
+    if (avatar_url !== undefined) {
+      updateFields.push(`avatar_url = $${paramCount}`);
+      updateValues.push(avatar_url);
+      paramCount++;
+    }
+
+    if (timezone !== undefined) {
+      updateFields.push(`timezone = $${paramCount}`);
+      updateValues.push(timezone);
+      paramCount++;
+    }
+
+    if (updateFields.length === 0) {
+      res.status(STATUS_CODES.VALIDATION_ERROR);
+      throw new Error("No fields to update");
+    }
+
+    // Add userId as the last parameter
+    updateValues.push(userId);
+
+    const updateQuery = `
+      UPDATE users 
+      SET ${updateFields.join(", ")}, updated_at = NOW()
+      WHERE id = $${paramCount}
+      RETURNING id, email, firstname, lastname, role, bio, avatar_url, timezone, created_at, updated_at
+    `;
+
+
+    const result = await query(updateQuery, updateValues);
+
+    if (result.rows.length === 0) {
+      res.status(STATUS_CODES.NOT_FOUND);
+      throw new Error("User not found");
+    }
+
+    const user = result.rows[0];
+
+    res.status(STATUS_CODES.OK).json({
+      message: "Profile updated successfully",
+      success: true,
+      user: {
+        avatar_url: user.avatar_url,
+        bio: user.bio,
+        created_at: user.created_at,
+        email: user.email,
+        firstname: user.firstname,
+        id: user.id,
+        lastname: user.lastname,
+        role: user.role,
+        timezone: user.timezone,
+        updated_at: user.updated_at,
+      },
     });
   } catch (error) {
     next(error);
