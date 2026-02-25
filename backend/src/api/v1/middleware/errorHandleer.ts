@@ -58,6 +58,10 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
       break;
 
     default:
-      console.log("No errors, All good!");
+      res.status(statusCode).json({
+        message: err.message,
+        stackTrace,
+        title: "Error",
+      });
   }
 }
