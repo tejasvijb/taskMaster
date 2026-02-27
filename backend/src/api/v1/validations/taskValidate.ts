@@ -35,10 +35,18 @@ const taskResponseSchema = z.object({
   updated_at: z.date(),
 });
 
+// Define the schema for task query filters
+const taskQuerySchema = z.object({
+  assignedTo: z.enum(["me"]).optional(),
+  search: z.string().max(255, "Search term must be less than 255 characters").optional(),
+  status: z.enum(["open", "in_progress", "completed", "closed"]).optional(),
+});
+
 export type TaskCreateType = z.infer<typeof taskCreateSchema>;
+export type TaskQueryType = z.infer<typeof taskQuerySchema>;
 export type TaskResponseType = z.infer<typeof taskResponseSchema>;
 export type TaskUpdateType = z.infer<typeof taskUpdateSchema>;
 
-export { taskCreateSchema, taskResponseSchema, taskUpdateSchema };
+export { taskCreateSchema, taskQuerySchema, taskResponseSchema, taskUpdateSchema };
 
 export default taskCreateSchema;
