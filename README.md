@@ -57,29 +57,29 @@ Follow RESTful API best practices.
 
 User stories:
 
-As a user, I want to be able to create a new account so that I can access the task tracking platform.
+As a user, I want to be able to create a new account so that I can access the task tracking platform. done
 
-As a user, I want to log in to my account securely using my credentials.
+As a user, I want to log in to my account securely using my credentials. done
 
-As a user, I want to view my profile and update my personal information.
+As a user, I want to view my profile and update my personal information. done
 
-As a user, I want to create a new task with a title, description, and due date.
+As a user, I want to create a new task with a title, description, and due date. done
 
-As a user, I want to view a list of all tasks assigned to me.
+As a user, I want to view a list of all tasks assigned to me. done
 
-As a user, I want to mark a task as completed when I finish working on it.
+As a user, I want to mark a task as completed when I finish working on it. done
 
-As a user, I want to assign a task to another team member.
+As a user, I want to assign a task to another team member. done
 
-As a user, I want to filter tasks based on their status (e.g., open, completed).
+As a user, I want to filter tasks based on their status (e.g., open, completed). done
 
-As a user, I want to search for tasks by title or description.
+As a user, I want to search for tasks by title or description. done
 
 As a user, I want to collaborate with team members by adding comments and attachments to tasks.
 
 As a user, I want to create a new team or project and invite team members to join.
 
-As a user, I want to securely log out of my account when I'm done using the platform.
+As a user, I want to securely log out of my account when I'm done using the platform. done
 
 (Optional Extension) As a user, I want to receive notifications when a task is assigned to me or updated. (Implement real-time notifications using WebSockets or Server-Sent Events)
 
