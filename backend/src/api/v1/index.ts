@@ -1,11 +1,15 @@
 import express from "express";
 
+import attachmentRoutes from "./routes/attachmentRoutes.js";
+import commentRoutes from "./routes/commentRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import teamRoutes from "./routes/teamRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 
 const apiV1Router = express();
 
+apiV1Router.use("/attachments", attachmentRoutes);
+apiV1Router.use("/comments", commentRoutes);
 apiV1Router.use("/tasks", taskRoutes);
 apiV1Router.use("/teams", teamRoutes);
 apiV1Router.use("/users", userRoutes);
