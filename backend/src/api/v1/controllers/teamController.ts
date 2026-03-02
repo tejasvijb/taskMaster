@@ -1,7 +1,10 @@
+import crypto from "crypto";
 import { NextFunction, Request, Response } from "express";
 
+import { sendTeamInvitation } from "../../../services/emailService.js";
 import { query } from "../config/dbConnection.js";
 import { STATUS_CODES } from "../constants/index.js";
+import { TeamInvitationType } from "../validations/teamInvitationValidate.js";
 import { TeamCreateType } from "../validations/teamValidate.js";
 
 export const createTeam = async (req: Request, res: Response, next: NextFunction) => {
@@ -126,6 +129,86 @@ export const getTeamById = async (req: Request, res: Response, next: NextFunctio
         name: team.name,
         updated_at: team.updated_at,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const inviteUserToTeam = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { teamId } = req.params;
+    const { email } = req.body as TeamInvitationType;
+    const userId = req.user?.id;
+    const userName = req.user?.firstname;
+
+    if (!userId) {
+      res.status(STATUS_CODES.UNAUTHORIZED);
+      throw new Error("User not authenticated");
+    }
+
+    // Verify team exists and user is the creator or has permission
+    const teamExists = await query("SELECT id, name, created_by FROM teams WHERE id = $1", [teamId]);
+    if (teamExists.rows.length === 0) {
+      res.status(STATUS_CODES.NOT_FOUND);
+      throw new Error("Team not found");
+    }
+
+    const team = teamExists.rows[0];
+    if (team.created_by !== userId) {
+      res.status(STATUS_CODES.FORBIDDEN);
+      throw new Error("Only team creator can invite members");
+    }
+
+    // Check if invitation already exists and is not expired
+    const existingInvitation = await query(
+      `SELECT id FROM team_invitations 
+       WHERE team_id = $1 AND email = $2 AND status = 'pending' AND expires_at > CURRENT_TIMESTAMP`,
+      [teamId, email],
+    );
+
+    if (existingInvitation.rows.length > 0) {
+      res.status(STATUS_CODES.CONFLICT);
+      throw new Error("An active invitation already exists for this email");
+    }
+
+    // Generate unique token
+    const token = crypto.randomBytes(32).toString("hex");
+
+    // Set expiration to 7 days from now
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    // Insert invitation into database
+    const result = await query(
+      `INSERT INTO team_invitations (team_id, email, invited_by, token, status, expires_at)
+       VALUES ($1, $2, $3, $4, 'pending', $5)
+       RETURNING id, team_id, email, invited_by, token, status, expires_at, created_at`,
+      [teamId, email, userId, token, expiresAt],
+    );
+
+    const invitation = result.rows[0];
+
+    // Send invitation email
+    await sendTeamInvitation({
+      email,
+      invitedBy: userName || "A user",
+      teamName: team.name,
+      token,
+    });
+
+    res.status(STATUS_CODES.CREATED).json({
+      invitation: {
+        created_at: invitation.created_at,
+        email: invitation.email,
+        expires_at: invitation.expires_at,
+        id: invitation.id,
+        invited_by: invitation.invited_by,
+        status: invitation.status,
+        team_id: invitation.team_id,
+        token: invitation.token,
+      },
+      message: "Invitation sent successfully",
+      success: true,
     });
   } catch (error) {
     next(error);
