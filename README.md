@@ -1,86 +1,338 @@
-Brief
-Develop a backend system for a task tracking and management application that facilitates collaboration and organization within teams or projects. The application should allow users to create, assign, and track tasks, as well as collaborate with team members through comments and attachments.
+# TaskMaster - Collaborative Task Tracking System
 
-Detailed Requirements:
+## About
 
-Project Setup:
+TaskMaster is a backend system for a task tracking and management application that enables team collaboration. It provides secure user authentication, task management with filtering and search capabilities, team/project collaboration, and features for comments and attachments on tasks.
 
-[Node.js]
+**Tech Stack:**
 
-Set up a Node.js project using Express.js.
+- Node.js with Express.js
+- PostgreSQL Database
+- JWT Authentication
+- TypeScript
+- Zod for Schema Validation
 
-Initialize dependencies with npm or yarn.
+## Setup Instructions
 
-Use a chosen database system for data storage.
+### Prerequisites
 
-[Java]
+- Node.js 16+ installed
+- PostgreSQL database running
+- npm or yarn package manager
 
-Set up a Java project using a framework such as Spring Boot.
+### Installation Steps
 
-Use Maven or Gradle for dependency management.
+1. **Clone and Install Dependencies**
 
-Choose a database system for data storage (e.g., MySQL, PostgreSQL, MongoDB).
+    ```bash
+    cd backend
+    npm install
+    ```
 
-User Authentication and Management:
+2. **Environment Configuration**
+    - Copy `.env.example` to `.env`
+    - Update the following variables:
+        - `PG_HOST`, `PG_USER`, `PG_PASSWORD`, `PG_DATABASE`
+        - `ACCESS_TOKEN_SECRET` (generate a secure key)
+        - `SMTP_*` (for email service)
+        - `FRONTEND_URL`, `APP_URL`
 
-Implement secure user authentication and authorization.
+3. **Database Setup**
 
-Provide endpoints for user registration, login, and profile management.
+    ```bash
+    npm run migrate
+    ```
 
-Use secure password hashing and consider implementing JWT for session management.
+4. **Start Development Server**
+    ```bash
+    npm run dev
+    ```
+    Server runs on `http://localhost:3001`
 
-Task Management:
+## API Endpoints
 
-Design a data model for tasks with attributes like title, description, and due date.
+### Authentication
 
-Implement CRUD operations for tasks.
+#### POST `/api/v1/users/register`
 
-Include features for task filtering, sorting, and searching.
+Register a new user account
 
-Team/Project Collaboration:
+- **Body:**
+    ```json
+    {
+        "email": "user@example.com",
+        "firstname": "John",
+        "lastname": "Doe",
+        "password": "password123"
+    }
+    ```
+- **Response:** User object with access token
 
-Allow users to create or join teams/projects.
+#### POST `/api/v1/users/login`
 
-Enable task assignment within teams/projects.
+Login to existing account
 
-Implement comments and attachments feature for tasks.
+- **Body:**
+    ```json
+    {
+        "email": "user@example.com",
+        "password": "password123"
+    }
+    ```
+- **Response:** User object with access token
 
-(Optional Extension) Implement real-time updates and notifications.
+#### POST `/api/v1/users/logout`
 
-RESTful API Endpoints:
+Logout user (requires auth)
 
-Design endpoints for user authentication, task management, and collaboration features.
+- **Headers:** `Authorization: Bearer <token>`
+- **Response:** Success message
 
-Ensure proper validation and error handling.
+#### GET `/api/v1/users/me`
 
-Follow RESTful API best practices.
+Get logged-in user details (requires auth)
 
-User stories:
+- **Headers:** `Authorization: Bearer <token>`
+- **Response:** Authenticated user object
 
-As a user, I want to be able to create a new account so that I can access the task tracking platform. done
+#### GET `/api/v1/users/profile`
 
-As a user, I want to log in to my account securely using my credentials. done
+Get user profile (requires auth)
 
-As a user, I want to view my profile and update my personal information. done
+- **Headers:** `Authorization: Bearer <token>`
+- **Response:** User profile with extended fields (avatar_url, bio, timezone)
 
-As a user, I want to create a new task with a title, description, and due date. done
+#### PUT `/api/v1/users/profile`
 
-As a user, I want to view a list of all tasks assigned to me. done
+Update user profile (requires auth)
 
-As a user, I want to mark a task as completed when I finish working on it. done
+- **Headers:** `Authorization: Bearer <token>`
+- **Body:**
+    ```json
+    {
+        "avatar_url": "https://example.com/avatar.jpg",
+        "bio": "User biography",
+        "timezone": "UTC"
+    }
+    ```
+- **Response:** Updated user profile
 
-As a user, I want to assign a task to another team member. done
+### Tasks
 
-As a user, I want to filter tasks based on their status (e.g., open, completed). done
+#### GET `/api/v1/tasks`
 
-As a user, I want to search for tasks by title or description. done
+Get tasks with optional filters (requires auth)
 
-As a user, I want to collaborate with team members by adding comments and attachments to tasks.
+- **Headers:** `Authorization: Bearer <token>`
+- **Query Parameters:**
+    - `assignedTo`: "me" (get tasks assigned to current user)
+    - `status`: "open" | "in_progress" | "completed" | "closed"
+    - `search`: Search term for title/description
+- **Response:** Array of task objects
 
-As a user, I want to create a new team or project and invite team members to join.
+#### POST `/api/v1/tasks`
 
-As a user, I want to securely log out of my account when I'm done using the platform. done
+Create a new task (requires auth)
 
-(Optional Extension) As a user, I want to receive notifications when a task is assigned to me or updated. (Implement real-time notifications using WebSockets or Server-Sent Events)
+- **Headers:** `Authorization: Bearer <token>`
+- **Body:**
+    ```json
+    {
+        "title": "Task Title",
+        "description": "Task description",
+        "priority": "high",
+        "status": "open",
+        "due_date": "2024-12-31",
+        "assigned_to": "uuid-of-user"
+    }
+    ```
+- **Response:** Created task object
 
-(Optional but good to have) As a user, I want to integrate a generative AI model to automatically generate task descriptions or summaries based on user input, reducing manual effort in task creation.
+#### PUT `/api/v1/tasks/:id`
+
+Update a task (requires auth)
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Body:**
+    ```json
+    {
+        "title": "Updated Title",
+        "status": "in_progress",
+        "priority": "medium",
+        "assigned_to": "uuid-of-user"
+    }
+    ```
+- **Response:** Updated task object
+
+### Teams
+
+#### POST `/api/v1/teams`
+
+Create a new team (requires auth)
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Body:**
+    ```json
+    {
+        "name": "Team Name",
+        "description": "Team description"
+    }
+    ```
+- **Response:** Created team object
+
+#### GET `/api/v1/teams`
+
+Get all user's teams (requires auth)
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Response:** Array of team objects
+
+#### GET `/api/v1/teams/:teamId`
+
+Get team details (requires auth)
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Response:** Team object with members
+
+#### POST `/api/v1/teams/:teamId/invitations`
+
+Invite user to team (requires auth)
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Body:**
+    ```json
+    {
+        "email": "user@example.com",
+        "role": "member"
+    }
+    ```
+- **Response:** Invitation object with token
+
+#### GET `/api/v1/teams/invitations/accept`
+
+Accept team invitation (requires auth)
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Query Parameters:**
+    - `token`: Invitation token
+- **Response:** Success message and team details
+
+### Comments
+
+#### POST `/api/v1/comments`
+
+Create a comment on a task (requires auth)
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Body:**
+    ```json
+    {
+        "task_id": "uuid-of-task",
+        "content": "Comment text here"
+    }
+    ```
+- **Response:** Created comment object
+
+#### GET `/api/v1/comments/task/:taskId`
+
+Get all comments on a task (requires auth)
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Response:** Array of comment objects
+
+#### PUT `/api/v1/comments/:commentId`
+
+Update a comment (requires auth)
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Body:**
+    ```json
+    {
+        "content": "Updated comment text"
+    }
+    ```
+- **Response:** Updated comment object
+
+#### DELETE `/api/v1/comments/:commentId`
+
+Delete a comment (requires auth)
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Response:** Success message
+
+### Attachments
+
+#### POST `/api/v1/attachments`
+
+Upload an attachment to a task (requires auth)
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Body:**
+    ```json
+    {
+        "task_id": "uuid-of-task",
+        "file_name": "document.pdf",
+        "file_url": "https://example.com/document.pdf",
+        "file_size": 1024,
+        "mime_type": "application/pdf"
+    }
+    ```
+- **Response:** Created attachment object
+
+#### GET `/api/v1/attachments/task/:taskId`
+
+Get all attachments on a task (requires auth)
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Response:** Array of attachment objects
+
+#### GET `/api/v1/attachments/:attachmentId`
+
+Get attachment details (requires auth)
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Response:** Attachment object
+
+#### DELETE `/api/v1/attachments/:attachmentId`
+
+Delete an attachment (requires auth)
+
+- **Headers:** `Authorization: Bearer <token>`
+- **Response:** Success message
+
+## Common Response Format
+
+**Success Response:**
+
+```json
+{
+    "success": true,
+    "data": {
+        /* response data */
+    }
+}
+```
+
+**Error Response:**
+
+```json
+{
+    "success": false,
+    "message": "Error description",
+    "details": {
+        /* validation errors */
+    }
+}
+```
+
+## Development Commands
+
+```bash
+npm run dev          # Start development server with hot reload
+npm run build        # Compile TypeScript
+npm run start        # Run compiled version
+npm run lint         # Check code style
+npm run lint:fix     # Fix linting issues
+npm run type-check   # Check TypeScript types
+npm run migrate      # Run database migrations
+```
