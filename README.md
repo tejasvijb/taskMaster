@@ -336,3 +336,5 @@ npm run lint:fix     # Fix linting issues
 npm run type-check   # Check TypeScript types
 npm run migrate      # Run database migrations
 ```
+
+feedback
