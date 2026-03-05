@@ -214,3 +214,105 @@ export const inviteUserToTeam = async (req: Request, res: Response, next: NextFu
     next(error);
   }
 };
+
+export const acceptTeamInvitation = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { token } = req.query;
+    const userId = req.user?.id;
+    const userEmail = req.user?.email;
+
+    if (!userId || !userEmail) {
+      res.status(STATUS_CODES.UNAUTHORIZED);
+      throw new Error("User not authenticated");
+    }
+
+    if (!token || typeof token !== "string") {
+      res.status(STATUS_CODES.VALIDATION_ERROR);
+      throw new Error("Invalid or missing invitation token");
+    }
+
+    // Find and validate invitation
+    const invitationResult = await query(
+      `SELECT id, team_id, email, status, expires_at, accepted_at 
+       FROM team_invitations 
+       WHERE token = $1`,
+      [token],
+    );
+
+    if (invitationResult.rows.length === 0) {
+      res.status(STATUS_CODES.NOT_FOUND);
+      throw new Error("Invitation not found");
+    }
+
+    const invitation = invitationResult.rows[0];
+
+    // Validate email matches - ensure logged-in user's email matches invitation email
+    const invitationEmail = invitation.email.toLowerCase().trim();
+    const loggedInUserEmail = userEmail.toLowerCase().trim();
+
+    if (invitationEmail !== loggedInUserEmail) {
+      res.status(STATUS_CODES.FORBIDDEN);
+      throw new Error(`This invitation is for ${invitation.email}, but you are logged in as ${userEmail}`);
+    }
+
+    // Validate invitation status
+    if (invitation.status !== "pending") {
+      res.status(STATUS_CODES.CONFLICT);
+      throw new Error(`Invitation has already been ${invitation.status}`);
+    }
+
+    // Validate invitation is not expired
+    if (new Date(invitation.expires_at) < new Date()) {
+      res.status(STATUS_CODES.CONFLICT);
+      throw new Error("Invitation has expired");
+    }
+
+    // Check if user is already a member of the team
+    const existingMember = await query(`SELECT id FROM team_members WHERE team_id = $1 AND user_id = $2`, [invitation.team_id, userId]);
+
+    if (existingMember.rows.length > 0) {
+      res.status(STATUS_CODES.CONFLICT);
+      throw new Error("You are already a member of this team");
+    }
+
+    // Update invitation status to accepted
+    await query(
+      `UPDATE team_invitations 
+       SET status = 'accepted', accepted_by = $1, accepted_at = CURRENT_TIMESTAMP 
+       WHERE id = $2`,
+      [userId, invitation.id],
+    );
+
+    // Add user to team_members
+    await query(
+      `INSERT INTO team_members (team_id, user_id, role) 
+       VALUES ($1, $2, 'member')`,
+      [invitation.team_id, userId],
+    );
+
+    // Get team details to return
+    const teamResult = await query(
+      `SELECT id, name, description, created_by, created_at, updated_at 
+       FROM teams 
+       WHERE id = $1`,
+      [invitation.team_id],
+    );
+
+    const team = teamResult.rows[0];
+
+    res.status(STATUS_CODES.OK).json({
+      message: "Invitation accepted successfully",
+      success: true,
+      team: {
+        created_at: team.created_at,
+        created_by: team.created_by,
+        description: team.description,
+        id: team.id,
+        name: team.name,
+        updated_at: team.updated_at,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
